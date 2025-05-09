@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mooves</title>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDnN8Bs_rU09GKGx9alQvriKBfv1xT62Mk",
+      authDomain: "howwasitapp-backend.firebaseapp.com",
+      projectId: "howwasitapp-backend",
+      storageBucket: "howwasitapp-backend.firebasestorage.app",
+      messagingSenderId: "1092026706237",
+      appId: "1:1092026706237:web:0f00c2c2a1e3bdb2497d54",
+      measurementId: "G-083MK8DV75"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  </script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #000;
+      color: white;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #2a0134;
+      padding: 20px 20px 60px;
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0px 0px 10px #3a0141;
+      position: relative;
+    }
+
+    .site-title {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      margin: 0;
+      font-size: 28px;
+      cursor: pointer;
+    }
+
+    .login-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background: linear-gradient(to right, #a020f0, #4b0082);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    .login-button:hover {
+      background: linear-gradient(to right, #d896ff, #5a007a);
+      transform: scale(1.05);
+    }
+
+    nav {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    nav a {
+      color: #a020f0;
+      text-decoration: none;
+      margin: 0 15px;
+      font-size: 18px;
+      transition: color 0.3s;
+      cursor: pointer;
+    }
+
+    nav a:hover {
+      color: #d896ff;
+    }
+
+    footer {
+      background: #2a0134;
+      text-align: center;
+      padding: 20px;
+      border-top: 1px solid #3a0141;
+      margin-top: 60px;
+    }
+
+    footer a {
+      color: #a020f0;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 16px;
+      transition: color 0.3s;
+    }
+
+    footer a:hover {
+      color: #d896ff;
+    }
+
+    .view {
+      display: none;
+      padding: 40px 20px;
+      max-width: 800px;
+      margin: 40px auto;
+      background: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    .active-view {
+      display: block;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .login-form input {
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+    }
+
+    .login-form button {
+      padding: 10px;
+      background-color: #a020f0;
+      border: none;
+      color: white;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    a {
+      color: #d896ff;
+    }
+
+    h1[onclick] {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="site-title" onclick="showView('home')">Mooves</h1>
+    <button class="login-button" onclick="showView('login')">Login</button>
+    <nav></nav>
+  </header>
+
+  <div class="view" id="home">
+    <div style="text-align: center; padding: 40px;">
+      <a href="https://example.com/download" target="_blank" style="
+        display: inline-block;
+        background-color: #c128ff;
+        color: white;
+        font-weight: bold;
+        font-size: 16px;
+        padding: 14px 28px;
+        border-radius: 8px;
+        text-decoration: none;
+        box-shadow: 0 0 10px #a020f0;">
+        Download Mooves
+      </a>
+    </div>
+  </div>
+
+  <div class="view" id="privacy">...</div>
+  <div class="view" id="terms">...</div>
+  <div class="view" id="contact">...</div>
+  <div class="view" id="about">...</div>
+
+  <div class="view" id="login">
+    <h2>Login</h2>
+    <form class="login-form" onsubmit="handleLogin(event)">
+      <input id="email" type="email" placeholder="Email" required />
+      <input id="password" type="password" placeholder="Password" required />
+      <button type="submit">Log In</button>
+    </form>
+    <p><a href="#" onclick="showView('home')">← Back to Home</a></p>
+  </div>
+
+  <footer>
+    <a href="#" onclick="showView('privacy')">Privacy Policy</a>
+    <a href="#" onclick="showView('terms')">Terms of Service</a>
+    <a href="#" onclick="showView('contact')">Contact</a>
+    <a href="#" onclick="showView('about')">About</a>
+  </footer>
+
+  <script>
+    const navLinks = document.querySelectorAll('nav a');
+    const views = document.querySelectorAll('.view');
+
+    function showView(id) {
+      views.forEach(view => {
+        view.classList.remove('active-view');
+        if (view.id === id) {
+          view.classList.add('active-view');
+        }
+      });
+    }
+
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        const target = link.getAttribute('data-target');
+        showView(target);
+      });
+    });
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(userCredential => {
+          alert("Login successful!");
+          showView('home');
+        })
+        .catch(error => {
+          alert("Login failed: " + error.message);
+        });
+    }
+
+    showView('home');
+  </script>
+</body>
+</html>
