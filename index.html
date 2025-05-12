@@ -75,7 +75,38 @@
           }
         }
       </script>
+<script>
+  function createMoove() {
+    const name = document.getElementById('activity-name').value;
+    const location = document.getElementById('location').value;
+    const time = document.getElementById('time').value;
+    const status = document.getElementById('create-status');
 
+    if (!name || !location || !time) {
+      status.innerText = "Please fill out all fields.";
+      return;
+    }
+
+    const timestamp = new Date(time);
+
+    firebase.firestore().collection('activityGroups').add({
+      activityName: name,
+      location: location,
+      timestamp: firebase.firestore.Timestamp.fromDate(timestamp)
+    })
+    .then(docRef => {
+      window.location.href = `?inviteId=${docRef.id}`;
+    })
+    .catch(error => {
+      console.error("Error creating document: ", error);
+      status.innerText = "Failed to create Moove.";
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // keep firebase init and showInvite inside here
+  });
+</script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const checkFirebase = setInterval(() => {
@@ -111,33 +142,6 @@
               view.classList.toggle("active-view", view.id === id)
             );
           }
-
-          function createMoove() {
-  const name = document.getElementById('activity-name').value;
-  const location = document.getElementById('location').value;
-  const time = document.getElementById('time').value;
-  const status = document.getElementById('create-status');
-
-  if (!name || !location || !time) {
-    status.innerText = "Please fill out all fields.";
-    return;
-  }
-
-  const timestamp = new Date(time);
-
-  firebase.firestore().collection('activityGroups').add({
-    activityName: name,
-    location: location,
-    timestamp: firebase.firestore.Timestamp.fromDate(timestamp)
-  })
-  .then(docRef => {
-    window.location.href = `?inviteId=${docRef.id}`; // ← REDIRECTS to new moove
-  })
-  .catch(error => {
-    console.error("Error creating document: ", error);
-    status.innerText = "Failed to create Moove.";
-  });
-}
 
           function showInvite(id) {
             db.collection("activityGroups").doc(id).get()
