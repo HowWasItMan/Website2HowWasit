@@ -16,7 +16,6 @@
     .view { display: none; }
   </style>
 
-  <!-- ✅ Properly defer Firebase SDK -->
   <script defer src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.10.0/firebase-auth-compat.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore-compat.js"></script>
@@ -24,9 +23,59 @@
 <body>
   <div class="view active-view" id="home">
     <div id="group-list" style="position:relative; min-height: 500px; padding-top: 40px;"></div>
-  </div>
+    <div id="default-preview" style="display:none; text-align:center; padding:40px;">
+      <h1 style="color:#c128ff; font-size:36px;">Mooves</h1>
+      <p style="color:#ccc; font-size:20px; max-width:600px; margin:0 auto;">
+        Welcome to Mooves. To see a specific invite, use a valid invite link.<br>
+        Otherwise, you're seeing this preview mode.
+      </p>
+      <p style="margin-top:40px;">
+        <button onclick="document.getElementById('create-moove-form').style.display='block'; this.style.display='none';" 
+          style="padding:12px 20px; background:#a020f0; color:white; border:none; border-radius:8px; font-size:18px; cursor:pointer;">
+          ➕ Create a Moove
+        </button>
+      </p>
+      <div id="create-moove-form" style="display:none; margin-top:40px; text-align:left; max-width:500px; margin-left:auto; margin-right:auto; background:#111; padding:20px; border-radius:10px;">
+        <h2 style="color:#a020f0;">Create a Moove</h2>
+      
+        <!-- Step 1: Activity Name -->
+        <div id="step-1">
+          <label>Activity Name:<br>
+            <input id="activity-name" type="text" style="width:100%; padding:8px; margin-top:5px;">
+          </label>
+          <button onclick="nextStep(1)" style="margin-top:20px; padding:12px 20px; background:#a020f0; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer;">Next</button>
+        </div>
+      
+        <!-- Step 2: Location -->
+        <div id="step-2" style="display:none;">
+          <label>Location:<br>
+            <input id="location" type="text" style="width:100%; padding:8px; margin-top:5px;">
+          </label>
+          <button onclick="nextStep(2)" style="margin-top:20px; padding:12px 20px; background:#a020f0; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer;">Next</button>
+        </div>
+      
+        <!-- Step 3: Time -->
+        <div id="step-3" style="display:none;">
+          <label>Time:<br>
+            <input id="time" type="datetime-local" style="width:100%; padding:8px; margin-top:5px;">
+          </label>
+          <button onclick="createMoove()" style="margin-top:20px; padding:12px 20px; background:#a020f0; color:white; border:none; border-radius:8px; font-size:16px; cursor:pointer;">Submit</button>
+        </div>
+      
+        <div id="create-status" style="margin-top:10px; color:#ccc;"></div>
+      </div>
+      
+      <script>
+        function nextStep(current) {
+          const curr = document.getElementById(`step-${current}`);
+          const next = document.getElementById(`step-${current + 1}`);
+          if (curr && next) {
+            curr.style.display = 'none';
+            next.style.display = 'block';
+          }
+        }
+      </script>
 
-  <!-- ✅ Init logic only after DOM and scripts -->
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const checkFirebase = setInterval(() => {
@@ -45,7 +94,17 @@
 
           const db = firebase.firestore();
           const inviteId = new URLSearchParams(location.search).get("inviteId");
-          if (inviteId) showView("home"), showInvite(inviteId);
+          const groupList = document.getElementById("group-list");
+          const defaultPreview = document.getElementById("default-preview");
+
+          if (inviteId) {
+            showView("home");
+            showInvite(inviteId);
+          } else {
+            showView("home");
+            groupList.style.display = "none";
+            defaultPreview.style.display = "block";
+          }
 
           function showView(id) {
             document.querySelectorAll(".view").forEach(view =>
@@ -53,11 +112,40 @@
             );
           }
 
+          function createMoove() {
+  const name = document.getElementById('activity-name').value;
+  const location = document.getElementById('location').value;
+  const time = document.getElementById('time').value;
+  const status = document.getElementById('create-status');
+
+  if (!name || !location || !time) {
+    status.innerText = "Please fill out all fields.";
+    return;
+  }
+
+  const timestamp = new Date(time);
+
+  firebase.firestore().collection('activityGroups').add({
+    activityName: name,
+    location: location,
+    timestamp: firebase.firestore.Timestamp.fromDate(timestamp)
+  })
+  .then(docRef => {
+    window.location.href = `?inviteId=${docRef.id}`; // ← REDIRECTS to new moove
+  })
+  .catch(error => {
+    console.error("Error creating document: ", error);
+    status.innerText = "Failed to create Moove.";
+  });
+}
+
           function showInvite(id) {
-            const groupList = document.getElementById("group-list");
             db.collection("activityGroups").doc(id).get()
               .then(doc => {
-                if (!doc.exists) return groupList.innerHTML = "<p style='color:red;'>Invite not found.</p>";
+                if (!doc.exists) {
+                  groupList.innerHTML = "<p style='color:red;'>Invite not found.</p>";
+                  return;
+                }
 
                 const data = doc.data();
                 const date = new Date(data.timestamp.seconds * 1000);
